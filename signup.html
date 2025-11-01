@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sign Up - TPL</title>
+    <link rel="stylesheet" href="signup.css" />
+      <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      /* OTP small styling to match existing button look */
+      #otpSection { display: none; margin-top: 12px; }
+      #otpSection .input-group input { padding:12px 14px; border-radius:8px; border:1px solid #333; background: rgba(255,255,255,0.02); color:#fff; font-size:15px; width:100%; }
+      .btn-cta {
+        display:inline-block;
+        width:100%;
+        padding:12px;
+        border-radius:8px;
+        border:none;
+        background:#00ffcc;
+        color:#000;
+        font-weight:700;
+        cursor:pointer;
+        font-size:16px;
+      }
+      .btn-cta[disabled] { opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
+      #resendOtp { color:#00ffd0; cursor:pointer; text-decoration:none; font-weight:600; }
+      #otpMessage { margin-top:8px; }
+    </style>
+  </head>
+  <body>
+    <div class="login-wrapper">
+      <div class="login-left">
+        <img src="dark-bg.jpeg" alt="Signup Background" class="bg-image" />
+        <div class="logo-container">
+          <h2 class="logo">Oxymora</h2>
+        </div>
+      </div>
+
+      <div class="login-right">
+        <form id="signupForm" class="login-form" autocomplete="off">
+          <h2>SIGN UP</h2>
+          <p>Create your account below</p>
+
+          <!-- wrap inputs in a container for easier hide/show -->
+          <div id="formInputsContainer">
+            <div class="input-group">
+              <input   type="text"
+                      id="name"
+                      placeholder="Enter your name"
+                      required
+                      autocomplete="name" />
+            </div>
+
+            <div class="input-group">
+              <input
+               type="email"
+                      id="email"
+                      placeholder="Enter your email"
+                      required
+                      autocomplete="email"
+                     />
+            </div>
+
+            <div class="input-group">
+              <input   type="tel"
+                      id="num"
+                      placeholder="Enter your phone number"
+                      required
+                      inputmode="tel"
+                      maxlength="10"
+                      pattern="^[6-9]\d{9}$"
+                      autocomplete="tel" />
+            </div>
+
+            <div class="input-group" style="position: relative;">
+              <input
+                type="password"
+                id="password"
+                placeholder="Enter your Password"
+                required
+                style="padding-right: 40px;"
+              />
+              <span
+                id="togglePassword"
+                style="
+                  position: absolute;
+                  right: 10px;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  cursor: pointer;
+                  font-size: 16px;
+                  color: #888;
+                "
+              >
+               <i class="fa-solid fa-eye"></i>
+              </span>
+            </div>
+          </div>
+
+          <button id="signupSubmit" type="submit">SIGN UP</button>
+
+          <!-- OTP section (hidden initially) -->
+          <div id="otpSection" aria-hidden="true">
+            <p id="otpInfo" style="color:#bdbdbd; font-size:14px; margin-bottom:8px;">
+              We sent an OTP to <strong id="otpEmail"></strong>
+            </p>
+
+            <div class="input-group">
+              <input type="text" id="otpInput" placeholder="Enter OTP" maxlength="8" inputmode="numeric" />
+            </div>
+
+            <button id="verifyOtpBtn" type="button" class="btn-cta">Verify OTP</button>
+
+            <p style="margin-top:8px; font-size:13px; color:#cfcfcf;">
+              Didn't get it? <a id="resendOtp">Resend</a>
+              <span id="resendTimer" style="margin-left:8px; color:#9a9a9a"></span>
+            </p>
+
+            <p id="otpMessage" class="form-message" style="display:none;"></p>
+          </div>
+
+          <p
+            style="
+              margin-top: 20px;
+              text-align: center;
+              font-size: 14px;
+              color: #ccc;
+            "
+          >
+            Already have an account?
+            <a href="login.html" style="color: #00ffcc; font-weight: bold"
+              >Log In</a
+            >
+          </p>
+        </form>
+      </div>
+    </div>
+
+<script>
+/* ---------- CONFIG ---------- */
+const REG_ENDPOINT = "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/registration.php";
+const OTP_ENDPOINT = "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/verify_otp.php";
+const RESEND_ENDPOINT = "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/resent_otp_vander_mac.php";
+
+/* OTP behavior settings */
+const OTP_MIN_LENGTH = 4;       // adjust to your OTP length
+const MAX_OTP_ATTEMPTS = 5;
+const RESEND_COOLDOWN = 60;     // seconds
+
+/* ---------- DOM ---------- */
+const signupForm = document.getElementById("signupForm");
+const signupSubmitBtn = document.getElementById("signupSubmit");
+const formInputsContainer = document.getElementById("formInputsContainer");
+const otpSection = document.getElementById("otpSection");
+const otpEmailSpan = document.getElementById("otpEmail");
+const otpInput = document.getElementById("otpInput");
+const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+const resendOtp = document.getElementById("resendOtp");
+const resendTimer = document.getElementById("resendTimer");
+const otpMessage = document.getElementById("otpMessage");
+
+/* password toggle */
+const togglePassword = document.getElementById("togglePassword");
+const passwordField = document.getElementById("password");
+togglePassword.addEventListener("click", () => {
+  const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
+  passwordField.setAttribute("type", type);
+  togglePassword.innerHTML = type === "password" 
+  ? `<i class="fa-solid fa-eye"></i>` 
+  : `<i class="fa fa-eye-slash" aria-hidden="true"></i>`;
+
+});
+
+/* ---------- Local state ---------- */
+let resendCountdown = 0;
+let resendInterval = null;
+let otpAttempts = 0;
+let currentEmail = "";
+let pendingSignup = null; // holds {name,email,num,password}
+
+/* ---------- Helpers ---------- */
+function validateEmail(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+function safeJson(res){ return res.json().catch(()=>({})); }
+function isStatusTrue(x){ return x === true || x === "true" || x === 1 || x === "1"; }
+function showMessage(msg, type="error"){
+  otpMessage.textContent = msg;
+  otpMessage.className = "form-message " + (type==="error"?"error":"success");
+  otpMessage.style.display = "block";
+}
+function clearMessage(){
+  otpMessage.style.display = "none";
+  otpMessage.textContent = "";
+}
+function startResendCooldown(seconds){
+  resendCountdown = seconds;
+  resendOtp.style.pointerEvents = "none";
+  resendOtp.style.opacity = "0.6";
+  resendTimer.textContent = `(${resendCountdown}s)`;
+  if(resendInterval) clearInterval(resendInterval);
+  resendInterval = setInterval(()=>{
+    resendCountdown--;
+    resendTimer.textContent = resendCountdown>0 ? `(${resendCountdown}s)` : "";
+    if(resendCountdown <= 0){
+      clearInterval(resendInterval);
+      resendOtp.style.pointerEvents = "auto";
+      resendOtp.style.opacity = "1";
+      resendTimer.textContent = "";
+    }
+  },1000);
+}
+
+/* ---------- NEW: hide/show form inputs & signup button ---------- */
+function hideFormInputsAndSignup() {
+  if (formInputsContainer) formInputsContainer.style.display = "none";
+  if (signupSubmitBtn) signupSubmitBtn.style.display = "none";
+}
+function showFormInputsAndSignup() {
+  if (formInputsContainer) formInputsContainer.style.display = "block";
+  if (signupSubmitBtn) signupSubmitBtn.style.display = "inline-block";
+}
+
+/* ---------- UI show/hide (now hides inputs and signup button) ---------- */
+function showOtpUI(email){
+  currentEmail = email;
+  otpEmailSpan.textContent = email;
+  otpSection.style.display = "block";
+  otpSection.setAttribute("aria-hidden","false");
+
+  // HIDE inputs and signup button
+  hideFormInputsAndSignup();
+
+  clearMessage();
+  startResendCooldown(RESEND_COOLDOWN);
+  otpInput.focus();
+}
+function hideOtpUI(){
+  currentEmail = "";
+  otpSection.style.display = "none";
+  otpSection.setAttribute("aria-hidden","true");
+
+  // SHOW inputs and signup button again (use this if you want to let user edit after failure)
+  showFormInputsAndSignup();
+
+  clearMessage();
+  otpInput.value = "";
+}
+
+/* ---------- API: call registration endpoint which should trigger sending OTP ---------- */
+async function requestRegistrationThatSendsOtp(payload){
+  try {
+    const res = await fetch(REG_ENDPOINT, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await safeJson(res);
+    console.log("registration (start) response", res.status, data);
+    if(res.ok && (isStatusTrue(data.status) || data.message?.toLowerCase()?.includes("otp") || data.message?.toLowerCase()?.includes("sent") )) {
+      return { ok:true, data };
+    } else {
+      return { ok:false, data };
+    }
+  } catch(err){
+    console.error("registration request error", err);
+    return { ok:false, error: err };
+  }
+}
+
+/* ---------- API: verify OTP ---------- */
+async function verifyOtp(email, otp){
+  try {
+    const res = await fetch(OTP_ENDPOINT, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ email, otp })
+    });
+    const data = await safeJson(res);
+    console.log("verifyOtp response", res.status, data);
+    if(res.ok && (isStatusTrue(data.status) || data.verified === true || data.message?.toLowerCase()?.includes("verified") || data.message?.toLowerCase()?.includes("success"))){
+      return { ok:true, data };
+    } else {
+      return { ok:false, data };
+    }
+  } catch(err){
+    console.error("verify otp error", err);
+    return { ok:false, error: err };
+  }
+}
+
+/* ---------- API: finalize registration if backend requires OTP to finalize account ---------- */
+async function finalizeRegistration(payloadWithOtp){
+  try {
+    const res = await fetch(REG_ENDPOINT, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payloadWithOtp)
+    });
+    const data = await safeJson(res);
+    console.log("registration (finalize) response", res.status, data);
+    if(res.ok && (isStatusTrue(data.status) || res.status === 200 || data.success === true)){
+      return { ok:true, data };
+    } else {
+      return { ok:false, data };
+    }
+  } catch(err){
+    console.error("finalize registration error", err);
+    return { ok:false, error: err };
+  }
+}
+
+/* ---------- NEW: resendOtpRequest uses dedicated resend endpoint ---------- */
+async function resendOtpRequest(email){
+  try {
+    const res = await fetch(RESEND_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    const data = await safeJson(res);
+    console.log("resendOtp response", res.status, data);
+    if (res.ok && (isStatusTrue(data.status) || data.sent === true || (data.message && /sent|otp/i.test(data.message)))) {
+      return { ok: true, data };
+    } else {
+      return { ok: false, data };
+    }
+  } catch (err) {
+    console.error("resendOtpRequest error", err);
+    return { ok:false, error: err };
+  }
+}
+
+/* ---------- Handlers ---------- */
+signupForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const num = document.getElementById("num").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if(!validateEmail(email)){ alert("Please enter a valid email."); return; }
+  if(!name || !num || !password){ alert("Please fill all required fields."); return; }
+
+  // keep pending signup in memory (do NOT store password in persistent storage)
+  pendingSignup = { name, email, num, password };
+
+  // call registration endpoint which should send OTP to email
+  signupSubmitBtn.disabled = true;
+  signupSubmitBtn.textContent = "Sending...";
+
+  const resp = await requestRegistrationThatSendsOtp(pendingSignup);
+  if(resp.ok){
+    showOtpUI(email);
+    showMessage(resp.data?.message || "OTP sent to your email. Enter it below.", "success");
+  } else {
+    signupSubmitBtn.disabled = false;
+    signupSubmitBtn.textContent = "SIGN UP";
+    const msg = (resp.data && resp.data.message) ? resp.data.message : (resp.error ? "Network error while requesting registration." : "Cannot send OTP. Try again later.");
+    alert(msg);
+  }
+});
+
+/* verify button click */
+verifyOtpBtn.addEventListener("click", async () => {
+  await handleOtpVerification();
+});
+
+/* auto-submit when OTP length reached or when user pastes OTP */
+otpInput.addEventListener("input", async (e) => {
+  const v = otpInput.value.trim();
+  otpInput.value = v.replace(/[^\dA-Za-z]/g,"");
+  if(otpInput.value.length >= OTP_MIN_LENGTH){
+    setTimeout(() => {
+      if(otpInput.value.length >= OTP_MIN_LENGTH) handleOtpVerification();
+    }, 250);
+  }
+});
+otpInput.addEventListener("paste", (e) => {
+  setTimeout(() => {
+    if(otpInput.value.trim().length >= OTP_MIN_LENGTH){
+      handleOtpVerification();
+    }
+  }, 100);
+});
+
+/* resend click -> uses dedicated resend endpoint */
+resendOtp.addEventListener("click", async () => {
+  if(resendCountdown > 0) return;
+  if(!pendingSignup || !pendingSignup.email) {
+    showMessage("No email available to resend OTP. Please start signup again.", "error");
+    return;
+  }
+
+  resendOtp.style.pointerEvents = "none";
+  resendOtp.style.opacity = "0.6";
+  showMessage("Resending OTP...", "success");
+
+  const resp = await resendOtpRequest(pendingSignup.email);
+
+  if (resp.ok) {
+    showMessage(resp.data?.message || "OTP resent. Check your email.", "success");
+    startResendCooldown(RESEND_COOLDOWN);
+    otpAttempts = 0;
+  } else {
+    const msg = (resp.data && resp.data.message) ? resp.data.message : (resp.error ? "Network error while resending OTP." : "Failed to resend OTP.");
+    showMessage(msg, "error");
+    resendOtp.style.pointerEvents = "auto";
+    resendOtp.style.opacity = "1";
+  }
+});
+
+/* main OTP verification flow */
+async function handleOtpVerification(){
+  const otp = otpInput.value.trim();
+  if(!otp || otp.length < 1){ showMessage("Enter the OTP.", "error"); return; }
+  if(otpAttempts >= MAX_OTP_ATTEMPTS){ showMessage("Maximum attempts reached. Please resend OTP.", "error"); return; }
+
+  otpAttempts++;
+  verifyOtpBtn.disabled = true;
+  verifyOtpBtn.textContent = "Verifying...";
+
+  // 1) call verify_otp.php
+  const v = await verifyOtp(pendingSignup.email, otp);
+  if(v.ok){
+    showMessage("OTP verified!", "success");
+
+    // 2) try to finalize registration by calling registration endpoint with otp included,
+    //    in case backend expects final confirmation here.
+    const finalizePayload = { ...pendingSignup, otp };
+    const fin = await finalizeRegistration(finalizePayload);
+
+    if(fin.ok){
+      // registration finalized by server
+      localStorage.setItem("isSignedUp", "true");
+      localStorage.setItem("userEmail", fin.data.email || pendingSignup.email);
+      localStorage.setItem("userName", fin.data.name || pendingSignup.name);
+      localStorage.setItem("userPhone", fin.data.phone || pendingSignup.num);
+      window.__pendingSignup = null;
+      window.location.href = "home.html";
+    } else {
+      // If finalize failed, it might be that registration was already created during first call.
+      const msg = (fin.data && fin.data.message) ? fin.data.message : "Verified. Redirecting...";
+      showMessage(msg, "success");
+      setTimeout(()=>{
+        localStorage.setItem("isSignedUp","true");
+        localStorage.setItem("userEmail", pendingSignup.email);
+        localStorage.setItem("userName", pendingSignup.name);
+        localStorage.setItem("userPhone", pendingSignup.num);
+        window.location.href = "home.html";
+      }, 1000);
+    }
+  } else {
+    const err = (v.data && v.data.message) ? v.data.message : (v.error ? "Network error verifying OTP." : "OTP invalid. Try again.");
+    showMessage(err, "error");
+    verifyOtpBtn.disabled = false;
+    verifyOtpBtn.textContent = "Verify OTP";
+
+    // since OTP failed, we may want to allow the user to edit details again.
+    // If you want inputs to remain hidden even after failure, remove/disable the next line.
+    showFormInputsAndSignup();
+  }
+}
+
+/* ensure OTP UI hidden and form inputs visible on load */
+document.addEventListener("DOMContentLoaded", () => {
+  // ensure inputs visible initially
+  showFormInputsAndSignup();
+  hideOtpUI();
+});
+</script>
+
+  </body>
+</html>

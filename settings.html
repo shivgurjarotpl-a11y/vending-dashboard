@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Settings - Dashboard</title>
+  <link rel="stylesheet" href="settings.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+  <div class="dashboard">
+
+   <aside class="sidebar">
+      <div>
+       
+        <div class="logo">
+          <img src="oxymora_logo (1).png" alt="Oxymora Logo">
+        </div>
+
+         <div class="sidebar-profile">
+        <div class="profile-info" onclick="toggleDropdown()">
+          <img src="profile.jpeg" alt="User">
+          <span id="welcome">Shiv</span>
+          <i class="fa-solid fa-caret-down"></i>
+        </div>
+        <div class="profile-dropdown" id="profileDropdown">
+          <a href="profile.html"><i class="fa-solid fa-user" style="margin-right: 8px;"></i> Profile</a>
+          <a href="settings.html"><i class="fa-solid fa-gear" style="margin-right: 8px;"></i> Settings</a>
+          <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket" style="margin-right: 8px;"></i> Logout</a>
+        </div>
+      </div>
+
+        
+        <nav class="menu">
+          <a href="home.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+          <a href="add-device.html"><i class="fa-solid fa-plus"></i> Add Device</a>
+         
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+          POWERED BY <br> © 2025 Oxymora Technology Pvt. Ltd.(OTPL)
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <h2 class="section-title"><i class="fa-solid fa-gear"></i> Settings Panel</h2>
+
+      <div class="settings-grid">
+
+        <!-- Preferences -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-moon"></i> Preferences</h3>
+          <div class="setting-item toggle-switch">
+            <label for="darkMode">Enable Dark Mode</label>
+            <label class="switch">
+              <input type="checkbox" id="darkMode">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-bell"></i> Notifications</h3>
+          <div class="setting-item toggle-switch">
+            <label for="emailNotif">Email Notifications</label>
+            <label class="switch">
+              <input type="checkbox" id="emailNotif" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item toggle-switch">
+            <label for="smsNotif">SMS Alerts</label>
+            <label class="switch">
+              <input type="checkbox" id="smsNotif">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Language -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-language"></i> Language</h3>
+          <div class="setting-item">
+            <label for="language">Select Language</label>
+            <select id="language">
+              <option>English</option>
+              <option>Hindi</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Security -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-lock"></i> Security</h3>
+          <div class="setting-item">
+            <label for="changePass">Change Password</label>
+            <input type="password" id="changePass" placeholder="Enter new password">
+          </div>
+        </div>
+
+        <!-- Theme Color -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-palette"></i> Theme Color</h3>
+          <div class="setting-item">
+            <label for="themeColor">Choose a theme color</label>
+            <select id="themeColor">
+              <option value="#1d1d1d">Default</option>
+              <option value="#007bff">Blue</option>
+              <option value="#28a745">Green</option>
+              <option value="#dc3545">Red</option>
+              <option value="#6f42c1">Purple</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Auto Logout -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-clock"></i> Auto Logout</h3>
+          <div class="setting-item">
+            <label for="autoLogout">Logout After</label>
+            <select id="autoLogout">
+              <option value="0">Never</option>
+              <option value="5">5 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="action-area">
+        <button class="btn save-btn"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+
+      const userName = localStorage.getItem("userName"); 
+
+  if (userName) {
+    document.getElementById("welcome").textContent = `Welcome, ${userName}`;
+  } 
+  
+    // Theme color change
+    document.getElementById('themeColor').addEventListener('change', function () {
+      document.documentElement.style.setProperty('--theme-color', this.value);
+      alert("Theme color updated!");
+    });
+
+    // Auto logout
+    document.getElementById('autoLogout').addEventListener('change', function () {
+      const minutes = this.value;
+      alert("Auto logout set to: " + (minutes == 0 ? "Never" : minutes + " minutes"));
+    });
+
+    // Logout
+    function logout() {
+      if (!confirm("Are you sure you want to log out ?")) return;
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userEmail");
+      window.location.href = "login.html";
+    }
+
+    // Toggle profile dropdown
+    function toggleDropdown() {
+      const dropdown = document.getElementById("profileDropdown");
+      dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
+    }
+
+    // Close dropdown on click outside
+    window.addEventListener("click", function (e) {
+      const dropdown = document.getElementById("profileDropdown");
+      if (dropdown && !dropdown.contains(e.target) && !e.target.closest(".profile-info")) {
+        dropdown.style.display = "none";
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>User Profile - Settings</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="profile.css" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+     
+      .overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .popupContent {
+        background: #fff;
+        padding: 18px;
+        border-radius: 8px;
+        width: 95%;
+        max-width: 820px;
+        max-height: 90vh;
+        overflow: auto;
+        position: relative;
+      }
+      .closeBtn {
+        position: absolute;
+        right: 12px;
+        top: 8px;
+        cursor: pointer;
+        font-size: 22px;
+      }
+      .form-step {
+        margin-top: 12px;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+      }
+      .form-grid label {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 6px;
+        color: #333;
+      }
+      .form-grid input {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+      }
+      .form-actions {
+        margin-top: 14px;
+        display: flex;
+        gap: 8px;
+      }
+      .action-btn {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        background: #f3f4f6;
+        cursor: pointer;
+      }
+      .badge--success {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 6px 10px;
+        border-radius: 999px;
+      }
+      .badge--pending {
+        background: #fff7ed;
+        color: #92400e;
+        padding: 6px 10px;
+        border-radius: 999px;
+      }
+      .badge--warn {
+        background: #fff1f0;
+        color: #7f1d1d;
+        padding: 6px 10px;
+        border-radius: 999px;
+      }
+      .api-error {
+        margin-bottom: 12px;
+      }
+      .copy-btn {
+        margin-left: 8px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+   <aside class="sidebar">
+      <div>
+       
+        <div class="logo">
+          <img src="oxymora_logo (1).png" alt="Oxymora Logo">
+        </div>
+
+         <div class="sidebar-profile">
+        <div class="profile-info" onclick="toggleDropdown()">
+          <img src="profile.jpeg" alt="User">
+          <span id="welcome">Shiv</span>
+          <i class="fa-solid fa-caret-down"></i>
+        </div>
+        <div class="profile-dropdown" id="profileDropdown">
+          <a href="profile.html"><i class="fa-solid fa-user" style="margin-right: 8px;"></i> Profile</a>
+          <a href="settings.html"><i class="fa-solid fa-gear" style="margin-right: 8px;"></i> Settings</a>
+          <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket" style="margin-right: 8px;"></i> Logout</a>
+        </div>
+      </div>
+
+        
+        <nav class="menu">
+          <a href="home.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+          <a href="add-device.html"><i class="fa-solid fa-plus"></i> Add Device</a>
+         
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+          POWERED BY <br> © 2025 Oxymora Technology Pvt. Ltd.(OTPL)
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <h2 class="settings-header">User Profile</h2>
+
+      <div class="profile-card">
+        <div class="profile-banner">
+          <img src="profile.jpeg" alt="User" class="profile-avatar" />
+        </div>
+        <div class="profile-content">
+          <div class="profile-name" id="userName">Shiv</div>
+          <div class="Pending">
+            <h1>Your KYC is Pending...</h1>
+            <p>Please complete your KYC</p>
+          </div>
+
+          <!-- Buttons: Complete KYC + Re-KYC (rekyc hidden by default) -->
+          <div style="margin-top: 12px">
+            <button id="openFormBtn" type="button">Complete KYC</button>
+            <button
+              class="rekycBtn"
+              type="button"
+              style="display: none; margin-left: 8px"
+            >
+              Re-KYC
+            </button>
+          </div>
+
+          <div
+            id="profileInfo"
+            style="
+              margin-top: 20px;
+              background: #f8f8f8;
+              padding: 15px;
+              border-radius: 8px;
+              align-items: center;
+              justify-content: center;
+            "
+          ></div>
+
+          <!-- Popup Overlay -->
+          <div id="popupOverlay" class="overlay">
+            <div
+              class="popupContent"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="popupTitle"
+            >
+              <!-- Close Button -->
+              <span class="closeBtn" id="closePopup" aria-label="Close"
+                >&times;</span
+              >
+
+              <!-- Fixed Top Heading -->
+              <div class="popup-header">
+                <h2 id="popupTitle">KYC FORM</h2>
+                <p id="stepTitle">Person Info</p>
+              </div>
+
+              <!-- Step 1: Person Info -->
+              <div id="personInfoForm" class="form-step">
+                <div class="form-grid">
+                  <div>
+                    <label for="name">Bank Holder Name</label>
+                    <input
+                      type="text"
+                      id="name"
+                      placeholder="Enter your name"
+                      required
+                      autocomplete="name"
+                    />
+                  </div>
+
+                  <div>
+                    <label for="number">Contect Number</label>
+                    <input
+                      type="tel"
+                      id="number"
+                      placeholder="Enter your phone number"
+                      required
+                      inputmode="tel"
+                      maxlength="10"
+                      pattern="^[6-9]\d{9}$"
+                      autocomplete="tel"
+                    />
+                  </div>
+                  <div>
+                    <label for="email">Email Id</label>
+                    <input
+                      type="email"
+                      id="email"
+                      placeholder="Enter your email"
+                      required
+                      autocomplete="email"
+                    />
+                  </div>
+                  <div>
+                    <label for="address1">Address 1</label>
+                    <input
+                      type="text"
+                      id="address1"
+                      placeholder="Enter your Address"
+                      required
+                      autocomplete="address-line1"
+                    />
+                  </div>
+                  <div>
+                    <label for="address2">Address 2</label>
+                    <input
+                      type="text"
+                      id="address2"
+                      placeholder="Enter your Address"
+                      required
+                      autocomplete="address-line2"
+                    />
+                  </div>
+                  <div>
+                    <label for="city">City</label>
+                    <input
+                      type="text"
+                      id="city"
+                      placeholder="Enter your City Name"
+                      required
+                      autocomplete="address-level2"
+                    />
+                  </div>
+                  <div>
+                    <label for="state">State</label>
+                    <input
+                      type="text"
+                      id="state"
+                      placeholder="Enter your state Name"
+                      required
+                      autocomplete="address-level1"
+                    />
+                  </div>
+                  <div>
+                    <label for="postal">Pin Code</label>
+
+                    <input
+                      type="text"
+                      id="postal"
+                      placeholder="Enter your Postal Code"
+                      required
+                      inputmode="numeric"
+                      maxlength="6"
+                      pattern="^\d{6}$"
+                      autocomplete="postal-code"
+                    />
+                  </div>
+                  <div>
+                  
+                    <input
+                      type="hidden"
+                      id="bizType"
+                      placeholder="Enter 6 Digit Unique Number"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="form-actions center">
+                  <button id="nextToAccount" type="button">Next</button>
+                </div>
+              </div>
+
+              <!-- Step 2: Account Info -->
+              <div id="accountInfoForm" class="form-step" style="display: none">
+                <div class="form-grid">
+                  <div>
+                    <label for="accountNumber">Account Number</label>
+                    <input
+                      type="text"
+                      id="accountNumber"
+                      placeholder="Enter account number"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label for="ifscCode">IFSC Code</label>
+                    <input
+                      type="text"
+                      id="ifscCode"
+                      placeholder="Enter IFSC code"
+                      required
+                      maxlength="11"
+                      pattern="^[A-Za-z]{4}0[A-Za-z0-9]{6}$"
+                      autocomplete="off"
+                    />
+                  </div>
+                </div>
+                <div class="form-actions center">
+                  <button id="backToPerson" class="back-btn" type="button">
+                    Back
+                  </button>
+                  <button id="saveBtn" type="button">Save</button>
+                </div>
+              </div>
+              <!-- (optional business step omitted) -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+      
+        const REKYC_ENDPOINT =
+          "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/reset_kyc_razorpay.php";
+        const REKYC_AUTH =
+          "Basic cnpwX2xpdmVfQTNKdnpaOXhpWFdIcDA6c1RHQzZtR2dBZDdOekM2WTlDdHhBakJj";
+
+        let isRekycMode = false;
+
+        /* -------------------- Utilities -------------------- */
+        function getStoredUserName() {
+          return (
+            localStorage.getItem("userName") ||
+            localStorage.getItem("user_name") ||
+            ""
+          );
+        }
+
+        function escapeHtml(str) {
+          if (str === null || str === undefined) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+        }
+
+        function showApiError(msg) {
+          clearApiError();
+          const popupContent = document.querySelector(".popupContent");
+          const box = document.createElement("div");
+          box.id = "apiErrorBox";
+          box.className = "api-error";
+          box.style.background = "#fff1f0";
+          box.style.border = "1px solid #fca5a5";
+          box.style.color = "#b91c1c";
+          box.style.padding = "10px";
+          box.style.marginBottom = "12px";
+          box.style.borderRadius = "6px";
+          box.innerHTML = `<strong>Error:</strong> ${escapeHtml(msg)}`;
+          if (popupContent) popupContent.insertBefore(box, popupContent.firstChild);
+          else document.body.insertBefore(box, document.body.firstChild);
+        }
+
+        function clearApiError() {
+          const box = document.getElementById("apiErrorBox");
+          if (box) box.remove();
+        }
+
+        function toggleDropdown() {
+          const dd = document.getElementById("profileDropdown");
+          if (dd) dd.classList.toggle("show");
+        }
+
+        function logout() {
+          if (!confirm("Are you sure you want to log out?")) return;
+          localStorage.removeItem("isLoggedIn");
+          window.location.href = "login.html";
+        }
+
+        function showFormStep(
+          stepIndex,
+          personForm,
+          accountForm,
+          businessForm,
+          stepTitleEl
+        ) {
+          [personForm, accountForm, businessForm].forEach((f, i) => {
+            if (!f) return;
+            f.style.display = i === stepIndex ? "block" : "none";
+          });
+          if (!stepTitleEl) return;
+          if (stepIndex === 0)
+            stepTitleEl.textContent = isRekycMode
+              ? "Re-KYC — Person Info"
+              : "Person Info";
+          else if (stepIndex === 1)
+            stepTitleEl.textContent = isRekycMode
+              ? "Re-KYC — Account Info"
+              : "Account Info";
+          else if (stepIndex === 2)
+            stepTitleEl.textContent = isRekycMode
+              ? "Re-KYC — Business Info"
+              : "Business Info";
+        }
+
+        function validateStep(form) {
+          if (!form) return true;
+          const inputs = form.querySelectorAll("input[required]");
+          for (let input of inputs) {
+            if (!input.value.trim()) {
+              input.reportValidity();
+              return false;
+            }
+          }
+          return true;
+        }
+
+        /* -------------------- Improved gatherPayload -------------------- */
+        function gatherPayload() {
+          const nameValue = (document.getElementById("name")?.value || "").trim();
+
+          // include multiple key shapes to match various backend expectations
+          const payload = {
+            // user identity
+            user_name: getStoredUserName(),
+
+            // names (send same value in all variants)
+            name: nameValue,
+            contact_name: nameValue,
+            request_contact_name: nameValue,
+            business_name: nameValue,
+            legal_business_name: nameValue,
+            request_business_name: nameValue,
+            beneficiary_name: nameValue,
+            request_beneficiary_name: nameValue,
+
+            // contact
+            email: (document.getElementById("email")?.value || "").trim(),
+            request_email: (document.getElementById("email")?.value || "").trim(),
+            phone: (document.getElementById("number")?.value || "").trim(),
+            request_phone: (document.getElementById("number")?.value || "").trim(),
+
+            // address
+            street1: (document.getElementById("address1")?.value || "").trim(),
+            street2: (document.getElementById("address2")?.value || "").trim(),
+            address_line1: (document.getElementById("address1")?.value || "").trim(),
+            address_line2: (document.getElementById("address2")?.value || "").trim(),
+            city: (document.getElementById("city")?.value || "").trim(),
+            state: (document.getElementById("state")?.value || "").trim(),
+            postal_code: (document.getElementById("postal")?.value || "").trim(),
+
+            // bank
+            bank_account: (document.getElementById("accountNumber")?.value || "").trim(),
+            account_number: (document.getElementById("accountNumber")?.value || "").trim(),
+            ifsc: (document.getElementById("ifscCode")?.value || "").trim(),
+            ifsc_code: (document.getElementById("ifscCode")?.value || "").trim(),
+
+            // meta / reference
+            reference_id: (document.getElementById("bizType")?.value || "").trim(),
+          };
+
+          return payload;
+        }
+
+        function validatePatternsInForm(form) {
+          if (!form) return true;
+          const patterns = {
+            number: /^[6-9]\d{9}$/,
+            email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            postal: /^\d{6}$/,
+            ifscCode: /^[A-Za-z]{4}0[A-Za-z0-9]{6}$/,
+            accountNumber: /^\d{9,18}$/,
+            bizType: /^\d{6}$/,
+            name: /^[A-Za-z\s.'-]{2,100}$/,
+          };
+
+          for (const id in patterns) {
+            const el = form.querySelector("#" + id);
+            if (!el) continue;
+            const v = (el.value || "").trim();
+            if (!v) continue;
+            const rx = patterns[id];
+            if (!rx.test(v)) {
+              el.focus();
+              const messages = {
+                number: "Phone should be 10 digits and start with 6-9.",
+                email: "Enter a valid email address.",
+                postal: "PIN must be 6 digits.",
+                ifscCode: "IFSC must be 11 characters (e.g. ABCD0EFGH12).",
+                accountNumber: "Account number should be 9-18 digits.",
+                bizType: "Reference ID must be a 6-digit number.",
+                name: "Enter a valid name (letters and spaces).",
+              };
+              alert(messages[id] || "Invalid value: " + id);
+              return false;
+            }
+          }
+          return true;
+        }
+
+   
+        function renderProfileInfo(d, kycState) {
+          const profileInfo = document.getElementById("profileInfo");
+          if (!profileInfo) return;
+
+          const info = {
+            user_name: d.user_name || d.user || getStoredUserName(),
+            contact_email: d.request_email || d.email || "",
+            contact_phone: d.request_phone || d.mobile || "",
+            business_name: d.request_business_name || d.business_name || "",
+            reference_id: d.request_reference_id || d.reference_id || "",
+            beneficiary_name: d.beneficiary_name || "",
+            bank_account: d.bank_account || "",
+            ifsc_code: d.ifsc_code || d.ifsc || "",
+            account_id: d.account_id || "",
+            stakeholder_id: d.stakeholder_id || "",
+            product_id: d.product_id || "",
+          };
+
+          const badgeClass = (function (s) {
+            s = (s || "").toString().toLowerCase();
+            if (s.includes("comp")) return "badge--success";
+            if (s.includes("pend") || s === "") return "badge--pending";
+            if (s.includes("error") || s.includes("fail")) return "badge--warn";
+            return "badge--unknown";
+          })(kycState);
+
+          profileInfo.innerHTML = `
+  <div class="profile-info-card">
+    <div class="profile-info-header" style="display:flex; align-items:center; justify-content:space-between;">
+     <div style="display:flex;gap:8px;align-items:center;">
+  <div style="padding:4px 8px;border-radius:4px;background:#e5e7eb;font-size:14px;">
+    ${escapeHtml("completed" || "unknown")}
+  </div>
+  
+
+
+</div>
+
+    </div>
+
+    <dFiv class="profile-grid" style="margin-top:12px; display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
+      <div class="field">
+        <div class="label">Contact Email</div>
+        <div class="value">${escapeHtml(info.contact_email || "—")}</div>
+      </div>
+
+      <div class="field">
+        <div class="label">Contact Phone</div>
+        <div class="value">
+          <span>${escapeHtml(info.contact_phone || "—")}</span>
+          ${
+            info.contact_phone
+              ? `<button class="copy-btn" data-copy="${escapeHtml(info.contact_phone)}">Copy</button>`
+              : ""
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">Business Name</div>
+        <div class="value">${escapeHtml(info.business_name || "—")}</div>
+      </div>
+
+      <div class="field">
+        <div class="label">Reference ID</div>
+        <div class="value">${escapeHtml(info.reference_id || "—")}</div>
+      </div>
+
+      <div class="field">
+        <div class="label">Beneficiary Name</div>
+        <div class="value">${escapeHtml(info.beneficiary_name || "—")}</div>
+      </div>
+
+      <div class="field">
+        <div class="label">Bank Account</div>
+        <div class="value">
+          <span>${escapeHtml(info.bank_account || "—")}</span>
+          ${
+            info.bank_account
+              ? `<button class="copy-btn" data-copy="${escapeHtml(info.bank_account)}">Copy</button>`
+              : ""
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">IFSC Code</div>
+        <div class="value">
+          <span>${escapeHtml(info.ifsc_code || "—")}</span>
+          ${
+            info.ifsc_code
+              ? `<button class="copy-btn" data-copy="${escapeHtml(info.ifsc_code)}">Copy</button>`
+              : ""
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">Account ID</div>
+        <div class="value">${escapeHtml(info.account_id || "—")}</div>
+      </div>
+
+      <div class="field">
+        <div class="label">Stakeholder ID</div>
+        <div class="value">${escapeHtml(info.stakeholder_id || "—")}</div>
+      </div>
+
+      <div class="field">
+        <div class="label">Product ID</div>
+        <div class="value">${escapeHtml(info.product_id || "—")}</div>
+      </div>
+    </div>
+  </div>
+`;
+
+         
+          const profileInfoCard = document.querySelector("#profileInfo");
+          if (profileInfoCard) {
+            profileInfoCard.onclick = function (e) {
+              const btn = e.target.closest(".copy-btn");
+              if (!btn) return;
+              const v = btn.getAttribute("data-copy") || "";
+              if (!v) return;
+              navigator.clipboard
+                ?.writeText(v)
+                .then(() => {
+                  const old = btn.textContent;
+                  btn.textContent = "Copied ✓";
+                  setTimeout(() => (btn.textContent = old), 1200);
+                })
+                .catch(() => {
+                  const ta = document.createElement("textarea");
+                  ta.value = v;
+                  document.body.appendChild(ta);
+                  ta.select();
+                  try {
+                    document.execCommand("copy");
+                    btn.textContent = "Copied ✓";
+                    setTimeout(() => (btn.textContent = "Copy"), 1200);
+                  } catch (_) {}
+                  ta.remove();
+                });
+            };
+          }
+
+          const viewRawBtn = document.getElementById("viewRawBtn");
+          if (viewRawBtn) {
+            viewRawBtn.addEventListener("click", () => {
+              const modal = document.createElement("div");
+              modal.style.position = "fixed";
+              modal.style.left = 0;
+              modal.style.top = 0;
+              modal.style.width = "100%";
+              modal.style.height = "100%";
+              modal.style.background = "rgba(0,0,0,0.6)";
+              modal.style.display = "flex";
+              modal.style.alignItems = "center";
+              modal.style.justifyContent = "center";
+              modal.innerHTML = `<pre style="max-width:90%; max-height:80%; overflow:auto; background:#fff; padding:16px; border-radius:8px;">${escapeHtml(
+                JSON.stringify(d, null, 2)
+              )}</pre>`;
+              modal.addEventListener("click", () => modal.remove());
+              document.body.appendChild(modal);
+            });
+          }
+        }
+
+        /* -------------------- Init KYC form (modal + steps + save) -------------------- */
+        function initKycForm() {
+          const openFormBtn = document.getElementById("openFormBtn");
+          const rekycBtn = document.querySelector(".rekycBtn");
+          const popupOverlay = document.getElementById("popupOverlay");
+          const personForm = document.getElementById("personInfoForm");
+          const accountForm = document.getElementById("accountInfoForm");
+          const businessForm = document.getElementById("businessInfoForm"); // may be null
+          const nextToAccount = document.getElementById("nextToAccount");
+          const backToPerson = document.getElementById("backToPerson");
+          const nextToBusiness = document.getElementById("nextToBusiness");
+          const backToAccount = document.getElementById("backToAccount");
+          const saveBtn = document.getElementById("saveBtn");
+          const closePopup = document.getElementById("closePopup");
+          const stepTitle = document.getElementById("stepTitle");
+
+          // helper to open modal and set focus + ESC handler once
+          function openModalAndFocus() {
+            if (popupOverlay) popupOverlay.style.display = "flex";
+
+            // focus first input
+            const first = document.getElementById("name") || document.querySelector("#personInfoForm input");
+            if (first) {
+              try {
+                first.focus();
+              } catch (_) {}
+            }
+
+            // attach ESC close only once
+            if (popupOverlay && !popupOverlay.dataset.escAttached) {
+              window.addEventListener("keydown", (ev) => {
+                if (ev.key === "Escape" && popupOverlay.style.display === "flex") {
+                  popupOverlay.style.display = "none";
+                  clearApiError();
+                }
+              });
+              popupOverlay.dataset.escAttached = "1";
+            }
+          }
+
+          if (openFormBtn) {
+            openFormBtn.addEventListener("click", () => {
+              isRekycMode = false;
+              clearApiError();
+              openModalAndFocus();
+              showFormStep(0, personForm, accountForm, businessForm, stepTitle);
+            });
+          }
+
+          if (rekycBtn) {
+            rekycBtn.addEventListener("click", () => {
+              alert("You cannot use your previous email. Please use a new email.");
+              isRekycMode = true;
+              clearApiError();
+              openModalAndFocus();
+              showFormStep(0, personForm, accountForm, businessForm, stepTitle);
+               if (bizEl && (!bizEl.value || bizEl.value.trim() === "")) bizEl.value = getRandomSixDigit();
+              
+
+             
+              try {
+                const lastRaw = localStorage.getItem("lastKycResponse");
+                const last = lastRaw ? JSON.parse(lastRaw) : null;
+              
+                let d = null;
+                if (last && last.data && Array.isArray(last.data) && last.data[0]) d = last.data[0];
+                else if (last && typeof last === "object") d = last;
+                if (d) {
+                  if (document.getElementById("email")) document.getElementById("email").value = d.request_email || d.email || "";
+                  if (document.getElementById("number")) document.getElementById("number").value = d.request_phone || d.mobile || "";
+
+              
+                  if (document.getElementById("name"))
+                    document.getElementById("name").value =
+                      d.request_contact_name ||
+                      d.contact_name ||
+                      d.request_business_name ||
+                      d.business_name ||
+                      d.beneficiary_name ||
+                      "";
+
+                  if (document.getElementById("address1")) document.getElementById("address1").value = d.street1 || "";
+                  if (document.getElementById("address2")) document.getElementById("address2").value = d.street2 || "";
+                  if (document.getElementById("city")) document.getElementById("city").value = d.city || "";
+                  if (document.getElementById("state")) document.getElementById("state").value = d.state || "";
+                  if (document.getElementById("postal")) document.getElementById("postal").value = d.postal_code || "";
+                  if (document.getElementById("accountNumber")) document.getElementById("accountNumber").value = d.bank_account || "";
+                  if (document.getElementById("ifscCode")) document.getElementById("ifscCode").value = d.ifsc_code || d.ifsc || "";
+                  if (document.getElementById("bizType")) document.getElementById("bizType").value = d.reference_id || document.getElementById("bizType").value;
+                }
+              } catch (e) {
+              
+                console.warn("prefill failed", e);
+              }
+            });
+          }
+
+          if (nextToAccount) {
+            nextToAccount.addEventListener("click", () => {
+              if (!validateStep(personForm)) return;
+              if (!validatePatternsInForm(personForm)) return;
+              showFormStep(1, personForm, accountForm, businessForm, stepTitle);
+            });
+          }
+
+          if (backToPerson)
+            backToPerson.addEventListener("click", () =>
+              showFormStep(0, personForm, accountForm, businessForm, stepTitle)
+            );
+
+          if (nextToBusiness) {
+            nextToBusiness.addEventListener("click", () => {
+              if (!validateStep(accountForm)) {
+                showFormStep(1, personForm, accountForm, businessForm, stepTitle);
+                return;
+              }
+              if (!validatePatternsInForm(accountForm)) return;
+              showFormStep(2, personForm, accountForm, businessForm, stepTitle);
+            });
+          }
+
+          if (backToAccount)
+            backToAccount.addEventListener("click", () =>
+              showFormStep(1, personForm, accountForm, businessForm, stepTitle)
+            );
+
+          if (saveBtn) {
+            saveBtn.addEventListener("click", async () => {
+              clearApiError();
+
+           
+              if (!validateStep(personForm)) { showFormStep(0, personForm, accountForm, businessForm, stepTitle); return; }
+              if (!validateStep(accountForm)) { showFormStep(1, personForm, accountForm, businessForm, stepTitle); return; }
+              if (!validateStep(businessForm)) { showFormStep(2, personForm, accountForm, businessForm, stepTitle); return; }
+
+           
+              if (!validatePatternsInForm(personForm)) { showFormStep(0, personForm, accountForm, businessForm, stepTitle); return; }
+              if (!validatePatternsInForm(accountForm)) { showFormStep(1, personForm, accountForm, businessForm, stepTitle); return; }
+              if (!validatePatternsInForm(businessForm)) { showFormStep(2, personForm, accountForm, businessForm, stepTitle); return; }
+
+              
+              const payload = gatherPayload();
+              if (!payload.email || !payload.phone) {
+                showApiError("Please fill required contact fields (email & phone).");
+                showFormStep(0, personForm, accountForm, businessForm, stepTitle);
+                return;
+              }
+
+              const originalText = saveBtn.textContent;
+              saveBtn.disabled = true;
+              saveBtn.textContent = isRekycMode ? "Submitting Re-KYC..." : "Saving...";
+
+              const apiUrl = isRekycMode ? REKYC_ENDPOINT : "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/razorpay_subacc_creation.php";
+              const headers = isRekycMode
+                ? { "Content-Type": "application/json", "Authorization": REKYC_AUTH }
+                : { "Content-Type": "application/json", Accept: "application/json" };
+
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+              try {
+                const res = await fetch(apiUrl, {
+                  method: "POST",
+                  headers,
+                  body: JSON.stringify(payload),
+                  signal: controller.signal,
+                });
+                clearTimeout(timeoutId);
+
+                let data = null;
+                try { data = await res.json(); } catch (e) { try { data = await res.text(); } catch (_) { data = null; } }
+
+                function findApiError(obj) {
+                  if (!obj || typeof obj !== "object") return null;
+                  if (obj.error && typeof obj.error === "object") return obj.error;
+                  if (obj.response && obj.response.error) return obj.response.error;
+                  if (obj.error && obj.error.response && obj.error.response.error) return obj.error.response.error;
+                  for (const k of Object.keys(obj)) {
+                    if (typeof obj[k] === "object") {
+                      const nested = findApiError(obj[k]);
+                      if (nested) return nested;
+                    }
+                  }
+                  return null;
+                }
+
+                const apiError = findApiError(data);
+                const errorDescription = apiError?.description || apiError?.message || (typeof data === "string" ? data : data?.message) || null;
+
+                if (!res.ok || apiError) {
+                  console.error("API returned an error:", data);
+                  showApiError(errorDescription || "Server returned an error. Please check the details and try again.");
+                  saveBtn.disabled = false;
+                  saveBtn.textContent = originalText;
+                  return;
+                }
+
+                console.log("API Response:", data);
+                clearApiError();
+                alert(isRekycMode ? "Re-KYC submitted successfully!" : "KYC Information Saved Successfully!");
+                if (popupOverlay) popupOverlay.style.display = "none";
+
+                try { localStorage.setItem("lastKycResponse", JSON.stringify(data)); } catch (e) {}
+
+                isRekycMode = false;
+                const rekycBtnAfter = document.querySelector(".rekycBtn");
+                if (rekycBtnAfter) rekycBtnAfter.style.display = "none";
+
+                await loadKycAndProfile();
+              } catch (err) {
+                clearTimeout(timeoutId);
+                if (err.name === "AbortError") showApiError("Request timed out. Please try again.");
+                else {
+                  console.error("Network error", err);
+                  showApiError("Network error. Please check your connection and try again.");
+                }
+              } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+              }
+            });
+          }
+
+          // if (popupOverlay) {
+          //   popupOverlay.addEventListener("click", (e) => {
+          //     if (e.target === popupOverlay) {
+          //       popupOverlay.style.display = "none";
+          //       clearApiError();
+          //     }
+          //   });
+          // }
+          if (closePopup)
+            closePopup.addEventListener("click", () => {
+              if (popupOverlay) popupOverlay.style.display = "none";
+              clearApiError();
+            });
+        }
+
+
+async function loadKycAndProfile() {
+  const userName = getStoredUserName();
+  const pendingDiv = document.querySelector(".Pending");
+  const kycBtn = document.getElementById("openFormBtn");
+  const rekycBtnEl = document.querySelector(".rekycBtn");
+  const profileInfo = document.getElementById("profileInfo");
+  const welcomeEl = document.getElementById("welcome");
+  const userNameEl = document.getElementById("userName");
+
+  // Set welcome message
+  if (userName) {
+    if (welcomeEl) welcomeEl.textContent = `Welcome, ${userName}`;
+    if (userNameEl) userNameEl.textContent = userName;
+  }
+
+  if (!profileInfo) {
+    console.error("profileInfo element missing in DOM.");
+    return;
+  }
+
+  if (!userName) {
+    profileInfo.innerHTML = `<p style="color:#b91c1c">User not found. Please login again.</p>`;
+    if (pendingDiv) pendingDiv.style.display = "block";
+    if (kycBtn) kycBtn.style.display = "none";
+    return;
+  }
+
+
+
+  try {
+    const resp = await fetch(
+      "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/razorpay_subacc_fetch.php",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_name: userName }),
+        redirect: "follow",
+      }
+    );
+
+    let result;
+    try {
+      result = await resp.json();
+    } catch (e) {
+      const text = await resp.text();
+      console.error("Non-JSON response from KYC fetch API:", text);
+      profileInfo.innerHTML = `<pre style="white-space:pre-wrap">${escapeHtml(text)}</pre>`;
+      return;
+    }
+
+    console.log("KYC Fetch Response (raw):", result);
+
+    if (!result || result.status !== "success" || !Array.isArray(result.data) || result.data.length === 0) {
+      
+      if (pendingDiv) pendingDiv.innerHTML = `<h1>Your KYC is Pending...</h1><p>Please complete your KYC</p>`;
+      if (kycBtn) kycBtn.style.display = "inline-block";
+      if (rekycBtnEl) rekycBtnEl.style.display = "none";
+      try { localStorage.removeItem("lastKycResponse"); } catch(_) {}
+      return;
+    }
+
+    const d = result.data[0];
+
+    // persist raw response so rekyc prefill can use it
+    try { localStorage.setItem("lastKycResponse", JSON.stringify(result)); } catch (e) {}
+
+    // 🔹 Determine KYC state
+    let kycState = "pending";
+    if (d.account_id) {
+      if (d.update_product_json && d.update_product_json.error) kycState = "completed_with_error";
+      else kycState = "completed";
+    }
+
+ 
+let statusMessage = "";
+let supportMessage = "";
+
+if (d.raz_acc_status === "Not Activated") {
+  statusMessage = `
+    <div style="
+      background: #fff4e5;
+      border: 1px solid #facc15;
+      color: #92400e;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 15px;
+      line-height: 1.6;
+    ">
+      <strong>Important:</strong> ${escapeHtml(d.comments || "Your KYC is not activated.")}
+    </div>
+  `;
+supportMessage = `
+  <div style="
+    background: #ecfdf5;
+    border: 1px solid #10b981;
+    color: #065f46;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  ">
+    <strong>Need Help?</strong><br>
+    Please check the details or contact support at 
+    <a href="mailto:gaurav.oytechnology@gmail.com" style="color:#047857; text-decoration:underline;">
+      gaurav.oytechnology@gmail.com
+    </a>.
+  </div>
+`;
+
+}
+else if (d.raz_acc_status === "Active") {
+  statusMessage = `
+    <div style="
+      background: #ecfdf5;
+      border: 1px solid #10b981;
+      color: #065f46;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 15px;
+      line-height: 1.6;
+    ">
+      <strong>Success:</strong> Your KYC is completed.
+    </div>
+  `;
+  renderProfileInfo(d, kycState);
+}
+else if (d.raz_acc_status == null) {
+  statusMessage = "Great! Your KYC verification will be completed within the next 24–48 hours.";
+} else {
+  // fallback based on kycState
+  if (kycState === "completed") {
+    statusMessage = "Great! Your KYC verification will be completed within the next 24–48 hours.";
+  } else if (kycState === "completed_with_error") {
+    statusMessage = "Your KYC has errors. Please contact support.";
+  } else {
+    statusMessage = "Your KYC is Pending...";
+  }
+}
+
+// 🔹 Update UI
+if (pendingDiv) {
+  pendingDiv.innerHTML = `
+  <div style="
+    color:#5d4037;
+    padding:10px 14px;
+    border-radius:8px;
+    margin-bottom:10px;
+    font-size:14px;
+  ">
+     ${statusMessage}
+  </div>
+  ${supportMessage}
+`;
+
+}
+
+
+    if (kycBtn) {
+      kycBtn.style.display = kycState === "pending" ? "inline-block" : "none";
+    }
+   if (rekycBtnEl) {
+  const showRekyc =
+    kycState === "completed_with_error" ||
+    (d.raz_acc_status === "Not Activated" &&
+      typeof d.comments === "string" &&
+      d.comments.toLowerCase().includes("rekyc"));
+  
+  rekycBtnEl.style.display = showRekyc ? "inline-block" : "none";
+}
+
+
+    // Show provider error if exists
+    if (d.update_product_json && d.update_product_json.error) {
+      const profileInfoEl = document.getElementById("profileInfo");
+      if (profileInfoEl) {
+        profileInfoEl.innerHTML += `
+        <div class="warning-box" role="alert" style="margin-top:12px;background:#fff7ed;padding:12px;border-radius:8px">
+          <strong>Error from provider:</strong>
+          <p><b>Code:</b> ${escapeHtml(d.update_product_json.error.code || "—")}</p>
+          <p><b>Description:</b> ${escapeHtml(d.update_product_json.error.description || "—")}</p>
+          <p><b>Reason:</b> ${escapeHtml(d.update_product_json.error.reason || "—")}</p>
+        </div>`;
+      }
+    }
+
+  } catch (err) {
+    console.error("Error fetching KYC data:", err);
+    profileInfo.innerHTML = `<p style="color:#b91c1c">Failed to load profile. Check console for details.</p>`;
+  }
+}
+
+
+     
+        function getRandomSixDigit() {
+          return Math.floor(100000 + Math.random() * 900000);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+ 
+          document.querySelector(".profile-info")?.addEventListener("click", toggleDropdown);
+          document.getElementById("logoutLink")?.addEventListener("click", function (e) { e.preventDefault(); logout(); });
+
+          initDropdownClose();
+          initKycForm();
+          loadKycAndProfile();
+
+          
+          const bizEl = document.getElementById("bizType");
+          if (bizEl && (!bizEl.value || bizEl.value.trim() === "")) bizEl.value = getRandomSixDigit();
+        });
+
+        function initDropdownClose() {
+          window.addEventListener("click", function (e) {
+            const dropdown = document.getElementById("profileDropdown");
+            const profileInfo = document.querySelector(".profile-info");
+            if (!dropdown || !profileInfo) return;
+            if (!profileInfo.contains(e.target)) dropdown.classList.remove("show");
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

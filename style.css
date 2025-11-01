@@ -1,0 +1,454 @@
+/* Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Funnel Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: #f5f7fb;
+  color: #333;
+  display: flex;
+  min-height: 100vh;
+}
+
+.dashboard {
+  display: flex;
+  width: 100%;
+}
+
+/* Sidebar */
+    .logo {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .logo img {
+      width: 150px;
+      
+    }
+.sidebar {
+  width: 250px;
+  background: #fff;
+   border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 15px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+
+  /* Profile dropdown */
+    .sidebar-profile {
+      margin-bottom: 25px;
+    }
+    .profile-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+    
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #f9fafb;
+     
+    }
+    .profile-info img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .profile-info span {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .profile-dropdown {
+      display: none;
+      flex-direction: column;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .profile-dropdown a {
+      padding: 10px 12px;
+      text-decoration: none;
+      color: #374151;
+      font-size: 14px;
+       display: flex;
+      transition: background 0.2s;
+    }
+    .profile-dropdown a:hover {
+      background: #f3f4f6;
+    }
+    .profile-dropdown.show {
+      display: flex;
+    }
+
+.menu {
+   display: flex;
+  flex-direction: column;
+      gap: 15px;
+}
+
+.menu a {
+  text-decoration: none;
+      color: #374151;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      transition: background 0.2s;
+}
+
+ .menu a:hover, .menu a.active {
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+.sidebar-bottom {
+  font-size: 12px;
+  text-align: center;
+  opacity: 0.8;
+ color: #6b7280;
+  margin-top: 20px;
+}
+
+/* Main content */
+.main-content {
+  margin-left: 240px;
+  padding: 30px;
+  flex: 1;
+}
+
+
+
+/* Heading text */
+.page-heading h2 {
+  color: #000000;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+
+
+
+/* Header layout (use with existing .page-header rules) */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.page-header h1 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #2c3e50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Count inside parentheses next to H1 */
+.h-count {
+  font-weight: 700;
+  color: #007bff;       /* count color */
+  font-size: 0.95rem;
+  margin-top: 5px;
+}
+
+/* If you want the number itself slightly bolder/different color */
+.h-count #totalDevices {
+  color: #034f84;
+  font-weight: 700;
+}
+
+/* Add Device button (reuse from earlier) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.18s ease;
+}
+
+.add-device-btn {
+  background: linear-gradient(90deg, #06b6d4, #3b82f6);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(59,130,246,0.18);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.add-device-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(59,130,246,0.18); }
+
+/* Mobile tweak: count stays inline but smaller */
+@media (max-width: 640px) {
+  .page-header h1 { font-size: 1.05rem; }
+  .h-count { font-size: 0.9rem; }
+  .header-actions { width: 100%; display:flex; justify-content: flex-end; margin-top: .5rem; }
+}
+
+
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #2c3e50;
+    }
+
+    .subtitle {
+      color: #7f8c8d;
+      font-size: 1.1rem;
+    }
+
+    .table-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .search-box {
+      position: relative;
+      flex-grow: 1;
+      max-width: 400px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 40px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #95a5a6;
+    }
+
+    .filters {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .filter-btn, .export-btn {
+      padding: 0.75rem 1.25rem;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .filter-btn:hover, .export-btn:hover {
+      background: #f8f9fa;
+      border-color: #ccc;
+    }
+
+    .table-container {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow-x: auto; /* responsive ke liye */
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+ color: #1e293b;
+}
+
+th,
+td {
+ padding: 12px 15px;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+.device-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 6px;
+  display: block;
+}
+
+/* Action Button */
+.action-btn {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  background: #eef1f5;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 13px;
+  text-decoration: none;
+  color: #2f1d7b;
+  font-weight: 500;
+}
+
+.action-btn:hover {
+  background: #2f1d7b;
+  color: #fff;
+}
+
+
+
+
+    @media (max-width: 768px) {
+      .table-container {
+        overflow-x: auto;
+      }
+      .table-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-box {
+        max-width: 100%;
+      }
+      .pagination {
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+
+
+
+    .device-count {
+  font-weight: 600;
+  margin: 10px 0;
+  color: #333;
+}
+.device-count span {
+  color: #007bff;
+}
+
+
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .main-content {
+    margin-left: 200px;
+  }
+
+  .card p {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+  }
+
+  .menu {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .main-content {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  table {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card h3 {
+    font-size: 16px;
+  }
+
+  .card p {
+    font-size: 18px;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+}
+
+
+/* Export disabled style */
+.export-btn.is-disabled,
+.export-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Dropdown open style */
+#profileDropdown { display: none; }
+#profileDropdown.open { display: block; }
+
+/* Row highlight animation applied via class 'highlight-anim' (keyframes injected by JS) */
+

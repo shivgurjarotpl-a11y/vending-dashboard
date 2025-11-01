@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Add Device</title>
+    <link rel="stylesheet" href="ragistration.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  </head>
+
+  <body>
+    <div class="dashboard">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <nav>
+          <img src="logo.png" alt="TPL Logo" class="logo-image" />
+          <a href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+          <a href="add-device.html"><i class="fa-solid fa-plus"></i> Add Device</a>
+          <a href="ragistration.html" class="active"><i class="fa-solid fa-id-card"></i> Client Registration</a>
+          <a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a>
+          <button onclick="logout()" class="logout-btn">
+            <i class="fa-solid fa-right-from-bracket"></i> Log Out
+         </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <small>© 2025 Oxymora Technology Pvt. Ltd.(OTPL)❤️</small>
+          <small>v1.0.0</small>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Device Form -->
+        <form id="clientForm" class="clint-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <input type="text" name="name" placeholder="Name" required />
+            </div>
+            <div class="form-group">
+              <input type="email" name="email" placeholder="Email" required />
+            </div>
+            <div class="form-group">
+              <input
+                type="text"
+                name="phone_num"
+                placeholder="Phone Number"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="text"
+                name="bank_name"
+                placeholder="Bank Name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="text"
+                name="acc_num"
+                placeholder="Acount Number"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input type="text" name="ifsc" placeholder="Ifsc Code" required />
+            </div>
+            <div class="form-group">
+              <input
+                type="text"
+                name="benef_name"
+                placeholder="Beneficiary Name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input type="text" name="qr_id" placeholder="QR Id" required />
+            </div>
+            <div class="form-group">
+              <input
+                type=""
+                name="disc"
+                id="disc"
+                placeholder="Discruption"
+                required
+              />
+            </div>
+             <div class="form-group">
+              <input type="hidden" name="date" id="date" required />
+            </div>
+          
+          </div>
+
+          <button type="submit">Submit</button>
+        </form>
+
+        <!-- Device Table -->
+        <section class="clint-table-section">
+          <h3>Registered clients</h3>
+          <div class="table-responsive">
+          <table id="clintTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Bank Name</th>
+                <th>Acount Number</th>
+                <th>Ifsc Code</th>
+                <th>Beneficiary Name</th>
+                <th>Qr Id</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody></tbody>
+          </table>
+          </div>
+          <div class="overlay" id="overlay"></div>
+          <div class="popup" id="popup">
+            <p id="popupContent"></p>
+            <button class="close-btn" onclick="closePopup()">Close</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+
+          if (localStorage.getItem("isLoggedIn") !== "true") {
+    window.location.href = "login.html";
+  }
+      window.onload = () => {
+        document.getElementById("date").value = getCurrentDate();
+         fetchAllClients();
+      };
+
+      function getCurrentDate() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      //     const preview = document.getElementById("preview");
+
+      //     const form = document.getElementById("clintForm");
+      //     form.addEventListener("submit", function (e) {
+      //       e.preventDefault();
+      //       const formData = new FormData(form);
+      //       const clint = {};
+      //       formData.forEach((val, key) => (clint[key] = val));
+      //       let clints = JSON.parse(localStorage.getItem("clints") || "[]");
+      //       clints.push(clint);
+      //       localStorage.setItem("clints", JSON.stringify(clints));
+
+      //       // Add row to table
+      //       const row = document.createElement("tr");
+      //       row.innerHTML = `
+      //         <td>${clint.name}</td>
+      //         <td>${clint.email}</td>
+      //         <td>${clint.number}</td>
+      //         <td>${clint.bank}</td>
+      //         <td>${clint.acount}</td>
+      //         <td>${clint.ifsc}</td>
+      //         <td>${clint.beneficiary}</td>
+      //         <td>${clint.qr}</td>
+      //         <td>${clint.date}</td>
+      //         <td><button class= infoBtn></button></td>
+      //       `;
+
+      //       const infoBtn  = row.querySelector('.infobtn')
+      //       infoBtn.addEventListener('click', ())
+      //       document.querySelector("#clintTable tbody").appendChild(row);
+
+      //       alert("Registration successfully!");
+      //       form.reset();
+      //       preview.style.display = "none";
+
+      //     });
+
+     const form = document.getElementById("clientForm");
+
+form.addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const clientData = {
+    name: form.name.value,
+    email: form.email.value,
+    phone_num: form.phone_num.value,
+    bank_name: form.bank_name.value,
+    acc_num: form.acc_num.value,
+    ifsc: form.ifsc.value,
+    benef_name: form.benef_name.value,
+    qr_id: form.qr_id.value,
+    disc: form.disc.value,
+    date: form.date.value,
+  };
+
+  fetch("https://cspv.in/Vending_dashbaord/vending_dashboard_apis/insert_client_reg.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(clientData)
+  })
+    .then(response => response.text())
+    .then(result => {
+      console.log("Server Response:", result);
+      alert("Client registered successfully!");
+      fetchAllClients(); // refresh the table
+      form.reset();
+      document.getElementById("date").value = getCurrentDate(); // reset date
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("Error registering client.");
+    });
+});
+
+      function fetchAllClients() {
+       fetch("https://cspv.in/Vending_dashbaord/vending_dashboard_apis/fetch_client_reg.php", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ name: "all" }),
+})
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("Fetched data from API:", data); 
+            const tbody = document.querySelector("#clintTable tbody");
+            tbody.innerHTML = "";
+
+            if (Array.isArray(data) && data.length > 0) {
+              data.forEach((client) => {
+                 if (!client.name || !client.email) return;
+                const row = document.createElement("tr");
+                row.innerHTML = `
+    <td>${client.name}</td>
+    <td>${client.email}</td>
+    <td>${client.phone_num}</td>
+    <td>${client.bank_name}</td>
+    <td>${client.acc_num}</td>
+    <td>${client.ifsc}</td>
+    <td>${client.benef_name}</td>
+    <td>${client.qr_id}</td>
+    <td>${client.date}</td>
+    <td>
+      <button class="action-btn view" onclick="showPopup('${client.disc}')"><i class="fa-solid fa-circle-info"></i></button>
+      <button class="action-btn delete" onclick="deleteClient('${client.email}')"><i class="fa-solid fa-trash"></i></button>
+      </td>
+  `;
+                tbody.appendChild(row);
+              });
+            } else {
+              tbody.innerHTML = `<tr><td colspan="8">Data Not Found.</td></tr>`;
+            }
+          })
+          .catch((err) => {
+            console.error("Fetch error:", err);
+            alert("Error fetching Clients");
+          });
+      }
+
+      function deleteClient(EmailId) {
+        if (!confirm("Are you sure you want to delete this client?")) return;
+
+        const formData = new FormData();
+        formData.append("email", EmailId);
+
+        fetch(
+          "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/delete_client_reg.php",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              email: EmailId
+            }),
+          }
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            alert("client deleted successfully!");
+            fetchAllClients(); 
+          })
+          .catch((err) => {
+            console.error("Delete error:", err);
+            alert("Error deleting device.");
+          });
+      }
+
+          function showPopup(description) {
+      popupContent.textContent = description;
+      popup.style.display = 'block';
+      overlay.style.display = 'block';
+    }
+
+    function closePopup() {
+      popup.style.display = 'none';
+      overlay.style.display = 'none';
+    }
+
+      function logout() {
+         if (!confirm("Are you sure you want to log out ?")) return;
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userEmail"); // optional
+    window.location.href = "login.html";
+  }
+    </script>
+  </body>
+</html>

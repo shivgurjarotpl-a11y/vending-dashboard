@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Add Device</title>
+    <link rel="stylesheet" href="add-device.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="dashboard">
+      <aside class="sidebar">
+        <div>
+          <div class="logo">
+            <img src="oxymora_logo (1).png" alt="Oxymora Logo" />
+          </div>
+
+          <div class="sidebar-profile">
+            <div class="profile-info" onclick="toggleDropdown()">
+              <img src="profile.jpeg" alt="User" />
+              <span id="welcome">Shiv</span>
+              <i class="fa-solid fa-caret-down"></i>
+            </div>
+            <div class="profile-dropdown" id="profileDropdown">
+              <a href="profile.html"
+                ><i class="fa-solid fa-user" style="margin-right: 8px"></i>
+                Profile</a
+              >
+              <a href="settings.html"
+                ><i class="fa-solid fa-gear" style="margin-right: 8px"></i>
+                Settings</a
+              >
+              <a href="#" onclick="logout()"
+                ><i
+                  class="fa-solid fa-right-from-bracket"
+                  style="margin-right: 8px"
+                ></i>
+                Logout</a
+              >
+            </div>
+          </div>
+
+          <nav class="menu">
+            <a href="home.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="add-device.html"
+              ><i class="fa-solid fa-plus"></i> Add Device</a
+            >
+          </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+          POWERED BY <br />
+          © 2025 Oxymora Technology Pvt. Ltd.(OTPL)
+        </div>
+      </aside>
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Device Form -->
+        <form id="deviceForm" enctype="multipart/form-data" class="device-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Device Name</label>
+              <input
+                type="text"
+                name="device_name"
+                placeholder="Device Name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Device Id (please check on your device)</label>
+              <input
+                type="text"
+                name="device_id"
+                placeholder="Device ID"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Device Type</label>
+              <input
+                type="text"
+                name="device_type"
+                placeholder="Device Type"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Model Number</label>
+              <input
+                type="text"
+                name="model_number"
+                placeholder="Model Number"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Address</label>
+              <input
+                type="text"
+                name="location"
+                placeholder="address"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Device Image</label>
+              <input
+                type="file"
+                name="image"
+                id="deviceImage"
+                accept="image/*"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="hidden"
+                name="user_name"
+                id="username"
+                placeholder="user name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="hidden"
+                name="sub_acc"
+                id="accountNumber"
+                placeholder="Sub Account Number"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="hidden"
+                name="purchase_date"
+                id="device_date"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="hidden"
+                name="category"
+                required
+                id="category_device"
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="hidden"
+                name="email"
+                required
+                id="email_device"
+              />
+            </div>
+          </div>
+
+          <!-- Image Preview -->
+          <img
+            id="preview"
+            style="
+              display: none;
+              width: 20%;
+              margin-top: 10px;
+              border-radius: 10px;
+            "
+          />
+
+          <button type="submit" id="nextPageBtn" >Add Device</button>
+          <p
+            id="kycWarning"
+            style="color: red; font-size: 14px; margin-top: 10px"
+          >
+            Please complete your KYC before adding a device <a href="profile.html">Go To Profile Page</a>
+          </p>
+        </form>
+
+        <!-- Devices Table -->
+        <section class="device-table-section">
+          <h3>Added Devices</h3>
+          <div class="table-responsive">
+            <table id="deviceTable">
+              <thead>
+                <tr>
+                  <th>Device Name</th>
+                  <th>Device Id</th>
+                  <th>Device Type</th>
+                  <th>Device Model</th>
+                  <th>Device Category</th>
+                  <th>Date</th>
+                  <th>Address</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <!-- Popup for QR -->
+          <div class="overlay" id="overlay"></div>
+          <div class="popup" id="popup">
+            <p id="popupContent"></p>
+            <button class="close-btn" onclick="closePopup()">Close</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+          // Redirect if not logged in
+          // if (localStorage.getItem("isLoggedIn") !== "true") {
+          //   window.location.href = "login.html";
+          // }
+
+          const userName = localStorage.getItem("userName");
+
+          if (userName) {
+            document.getElementById("welcome").textContent = `Welcome, ${userName}`;
+            document.getElementById("username").value = userName;
+          }
+
+          const form = document.getElementById("deviceForm");
+          const preview = document.getElementById("preview");
+
+          // Fetch devices on load
+          fetchAllDevices();
+
+          // Add device
+          form.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            let isValid = true;
+            let messages = [];
+
+            const deviceName = this.device_name.value.trim();
+            if (deviceName.length < 3) {
+              isValid = false;
+              messages.push("Device Name must be at least 3 characters.");
+            }
+
+            const deviceId = this.device_id.value.trim();
+            if (!/^[a-zA-Z0-9]+$/.test(deviceId)) {
+              isValid = false;
+              messages.push(
+                "Device ID must be alphanumeric (letters and numbers only)."
+              );
+            }
+
+            const modelNumber = this.model_number.value.trim();
+            if (modelNumber === "") {
+              isValid = false;
+              messages.push("Model Number is required.");
+            }
+
+            const purchaseDate = new Date(this.purchase_date.value);
+            const today = new Date();
+            document.getElementById("device_date").value = today.toDateString();
+            const cate = "Production";
+            document.getElementById("category_device").value = cate;
+
+            if (purchaseDate > today) {
+              isValid = false;
+              messages.push("Purchase Date cannot be in the future.");
+            }
+
+
+
+            const location = this.location.value.trim();
+            if (location.length < 2) {
+              isValid = false;
+              messages.push("Location must be at least 2 characters.");
+            }
+
+            const imageInput = document.getElementById("deviceImage");
+            if (imageInput.files.length === 0) {
+              isValid = false;
+              messages.push("Please upload a Device Image.");
+            } else {
+              const file = imageInput.files[0];
+              if (!file.type.startsWith("image/")) {
+                isValid = false;
+                messages.push("Only image files are allowed.");
+              }
+            }
+
+            if (!isValid) {
+              alert(messages.join("\n"));
+              return;
+            }
+
+            const formData = new FormData();
+            formData.append("device_id", form.device_id.value);
+            formData.append("device_name", form.device_name.value);
+            formData.append("device_type", form.device_type.value);
+            formData.append("model_number", form.model_number.value);
+            formData.append("category", form.category.value);
+            formData.append("sub_acc", form.sub_acc.value);
+            formData.append("purchase_date", form.purchase_date.value);
+            formData.append(
+              "image",
+              document.getElementById("deviceImage").files[0]
+            );
+            formData.append("location", form.location.value);
+            formData.append("user_name", form.user_name.value);
+            formData.append("email", form.email.value);
+
+            fetch(
+              "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/Insert_vending.php",
+              {
+                method: "POST",
+                body: formData,
+              }
+            )
+              .then((res) => res.json())
+              .then(() => {
+                alert("Device added successfully!");
+                form.reset();
+                preview.src = "";
+                preview.style.display = "none";
+                fetchAllDevices();
+              })
+              .catch((err) => {
+                console.error("Upload error:", err);
+              });
+          });
+
+          // Preview image
+          document
+            .getElementById("deviceImage")
+            .addEventListener("change", function () {
+              const file = this.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = function () {
+                  preview.src = reader.result;
+                  preview.style.display = "block";
+                };
+                reader.readAsDataURL(file);
+              } else {
+                preview.style.display = "none";
+              }
+            });
+
+          // Fetch all devices
+          function fetchAllDevices() {
+            fetch(
+              "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/fetch_vending.php",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_name: userName }),
+              }
+            )
+              .then((res) => res.json())
+              .then((data) => {
+                console.log("API Response:", data);
+                const tbody = document.querySelector("#deviceTable tbody");
+                tbody.innerHTML = "";
+
+                if (Array.isArray(data) && data.length > 0) {
+                  data.forEach((device) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                  <td>${device.device_name}</td>
+                  <td>${device.device_id}</td>
+                  <td>${device.device_type}</td>
+                  <td>${device.model_number}</td>
+                  <td>${device.category}</td>
+                  <td>${device.date}</td>
+                  <td>${device.location}</td>
+                  <td>
+                    <a href="view-device.html?device_id=${device.device_id}" class="action-btn eye"><i class="fa-solid fa-circle-info"></i></a>
+                    <button class="action-btn view" onclick="showPopup('${device.qr_image}', '${device.qr_Id}')"><i class="fa-solid fa-eye"></i></button>
+                    <button class="action-btn delete" onclick="deleteDevice('${device.device_id}')"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+                `;
+                    tbody.appendChild(row);
+                  });
+                } else {
+                  tbody.innerHTML = `<tr><td colspan="10">No devices found.</td></tr>`;
+                }
+              })
+              .catch((err) => {
+                console.error("Fetch error:", err);
+              });
+          }
+
+          // Delete device
+          function deleteDevice(deviceId) {
+            if (!confirm("Are you sure you want to delete this device?")) return;
+
+            fetch(
+              "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/delete_vending.php",
+              {
+                method: "POST",
+                body: JSON.stringify({ device_id: deviceId }),
+              }
+            )
+              .then((res) => res.json())
+              .then(() => {
+                alert("Device deleted successfully!");
+                fetchAllDevices();
+              })
+              .catch((err) => {
+                console.error("Delete error:", err);
+              });
+          }
+
+          // Show popup with QR
+          function showPopup(qrImage, qrId) {
+            popupContent.innerHTML = `
+        <p><strong>QR ID:</strong> ${qrId}</p>
+        <img src="${qrImage}" alt="QR Code" style="max-width:50%; border-radius:8px; margin-top:10px;" />
+        <br />
+        <a href="${qrImage}" download class="download" style="margin-top:10px; display:inline-block; ">Download QR</a>
+      `;
+            popup.style.display = "block";
+            overlay.style.display = "block";
+          }
+
+          function closePopup() {
+            popup.style.display = "none";
+            overlay.style.display = "none";
+          }
+
+          // Logout
+          function logout() {
+            if (!confirm("Are you sure you want to log out?")) return;
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userEmail");
+            window.location.href = "login.html";
+          }
+
+          // Toggle Profile Dropdown
+          function toggleDropdown() {
+            const dropdown = document.getElementById("profileDropdown");
+            dropdown.style.display =
+              dropdown.style.display === "block" ? "none" : "block";
+          }
+
+          // Close dropdown on outside click
+          window.addEventListener("click", function (e) {
+            const dropdown = document.getElementById("profileDropdown");
+            const profileInfo = document.querySelector(".profile-info");
+            if (!dropdown.contains(e.target) && !profileInfo.contains(e.target)) {
+              dropdown.style.display = "none";
+            }
+          });
+       
+function kycget() {
+  fetch("https://cspv.in/Vending_dashbaord/vending_dashboard_apis/razorpay_subacc_fetch.php", {
+    method: "POST",
+    body: JSON.stringify({ user_name: userName }),
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      console.log(result);
+
+      const btn = document.getElementById("nextPageBtn");
+      const warning = document.getElementById("kycWarning");
+
+      if (result.status === "error" || !result.data || result.data.length === 0) {
+
+        btn.disabled = true;
+        btn.classList.add("disabled-btn");
+        if (warning) warning.style.display = "block";
+        alert("KYC verification is required before adding a device.");
+        return;
+
+      }
+
+      const d = result.data[0];
+
+      if (d.request_email) document.getElementById("email_device").value = d.request_email;
+      if (d.bank_account) document.getElementById("accountNumber").value = d.bank_account;
+
+      if (d.raz_acc_status?.toLowerCase() === "active") {
+        btn.disabled = false;
+        btn.classList.remove("disabled-btn");
+        if (warning) warning.style.display = "none";
+      } else {
+        btn.disabled = true;
+        btn.classList.add("disabled-btn");
+        if (warning) warning.style.display = "block";
+        alert("KYC verification is required before adding a device.");
+
+      }
+    })
+    .catch((err) => {
+      console.error("Fetch error:", err);
+    });
+}
+
+
+kycget();
+
+
+    </script>
+  </body>
+</html>

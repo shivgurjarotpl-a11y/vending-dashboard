@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>View Device</title>
+  <link rel="stylesheet" href="view-device.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="dashboard">
+    
+   <aside class="sidebar">
+      <div>
+       
+        <div class="logo">
+          <img src="oxymora_logo (1).png" alt="Oxymora Logo">
+        </div>
+
+         <div class="sidebar-profile">
+        <div class="profile-info" onclick="toggleDropdown()">
+          <img src="profile.jpeg" alt="User">
+          <span id="welcome">Shiv</span>
+          <i class="fa-solid fa-caret-down"></i>
+        </div>
+        <div class="profile-dropdown" id="profileDropdown">
+          <a href="profile.html"><i class="fa-solid fa-user" style="margin-right: 8px;"></i> Profile</a>
+          <a href="settings.html"><i class="fa-solid fa-gear" style="margin-right: 8px;"></i> Settings</a>
+          <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket" style="margin-right: 8px;"></i> Logout</a>
+        </div>
+      </div>
+
+        
+        <nav class="menu">
+          <a href="home.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+          <a href="add-device.html"><i class="fa-solid fa-plus"></i> Add Device</a>
+         
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+          POWERED BY <br> © 2025 Oxymora Technology Pvt. Ltd.(OTPL)
+      </div>
+    </aside>
+
+<main class="main-content">
+
+  <!-- Header -->
+  <header class="device-header">
+  <h2>Device Name: <span id="deviceName"></span></h2>
+    <h4>Category: <span id="deviceCategory"></span></h4>
+  </header>
+
+  <!-- Device Info Top Section -->
+  <section class="device-info">
+    <p><strong>Device ID: </strong> <span id="deviceId"></span></p>
+    <p><strong>User Name: </strong> <span id="userName"></span></p>
+    <p><strong>Type:</strong> <span id="deviceType"></span></p>
+    <p><strong>Model No:</strong> <span id="modelNumber"></span></p>
+    <p><strong>Date:</strong> <span id="purchaseDate"></span></p>
+    <p><strong>Location:</strong> <span id="location"></span></p>
+    <p><strong>QR ID:</strong> <span id="qrId">-</span></p>
+    <p><strong>Email ID:</strong> <span id="emailId">-</span></p>
+
+  </section>
+
+
+<!-- Media Row: Left = device image (small), Right = QR + download -->
+<section class="media-row">
+  <div class="media-left">
+    <div class="device-photo small">
+      <img id="devicePhoto" src="" alt="Device Photo" />
+    </div>
+  </div>
+
+  <div class="media-right">
+    <div class="qr-card">
+      <div class="qr-image-wrap">
+        <img id="qrImage" src="" alt="QR Code" />
+      </div>
+      <a id="downloadQR" href="#" download class="download modern">Download QR</a>
+    </div>
+  </div>
+</section>
+
+
+</main>
+
+  </div>
+
+ <script>
+ console.log("hello sir ")
+const params = new URLSearchParams(window.location.search);
+const deviceId = params.get("device_id");
+console.log("device id ", deviceId);
+
+if (!deviceId) {
+  alert("Invalid request! Device ID missing.");
+  window.location.href = "home.html";
+}
+
+
+    const userName = localStorage.getItem("userName"); 
+
+  if (userName) {
+    document.getElementById("welcome").textContent = `Welcome, ${userName}`;
+  }
+
+
+  
+fetch("https://cspv.in/Vending_dashbaord/vending_dashboard_apis/fetch_vending.php", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ device_id: deviceId })   
+})
+  .then(res => res.json())  
+  .then(data => {
+    console.log("Single Device Response:", data);
+
+    if (Array.isArray(data) && data.length > 0) {
+      const device = data[0];  
+
+      document.getElementById("deviceName").textContent = device.device_name;
+       document.getElementById("userName").textContent = device.user_name;
+      document.getElementById("deviceId").textContent = device.device_id;
+      document.getElementById("deviceType").textContent = device.device_type;
+      document.getElementById("modelNumber").textContent = device.model_number;
+      document.getElementById("deviceCategory").textContent = device.category;
+      document.getElementById("purchaseDate").textContent = device.date;
+      document.getElementById("location").textContent = device.location;
+      document.getElementById("emailId").textContent = device.email;
+
+      // Device image
+      document.getElementById("devicePhoto").src =
+        "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/image/" + device.image;
+
+        document.getElementById("qrId").textContent = device.qr_Id;
+
+      const base = "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/image/";
+const qrImgEl = document.getElementById("qrImage");
+const downloadEl = document.getElementById("downloadQR");
+
+const qrField = (device.qr_image ?? device.qrImage ?? "").trim();
+
+if (!qrField) {
+  qrImgEl.style.display = "none";
+  downloadEl.style.display = "none";
+  console.warn("No qr_image value");
+} else {
+  // if it's a full URL use it, otherwise build from base + filename
+  const qrSrc = /^https?:\/\//i.test(qrField) ? qrField : (base + encodeURIComponent(qrField));
+  console.log("Setting QR src ->", qrSrc);
+  qrImgEl.src = qrSrc;
+  qrImgEl.onload = () => console.log("QR loaded successfully:", qrSrc);
+  qrImgEl.onerror = () => {
+    console.error("QR image failed to load:", qrSrc);
+    qrImgEl.style.display = "none"; // hide broken image
+    // fallback: show link so user can open it manually
+    downloadEl.href = qrSrc;
+    downloadEl.target = "_blank";
+    downloadEl.textContent = "Open QR Link";
+    downloadEl.style.display = "";
+  };
+
+  // set download/open link as well
+  downloadEl.href = qrSrc;
+  downloadEl.target = "_blank";
+  downloadEl.textContent = "Open/Download QR";
+  downloadEl.style.display = "";
+}
+
+    } else {
+      alert("Device not found!");
+    }
+  })
+  .catch(err => {
+    console.error("Fetch single device error:", err);
+    alert("Error fetching device details.");
+  });
+
+    function logout() {
+      if (!confirm("Are you sure you want to log out?")) return;
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userEmail");
+      window.location.href = "login.html";
+    }
+
+   function toggleDropdown() {
+      const dropdown = document.getElementById("profileDropdown");
+      dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    }
+
+        window.addEventListener("click", function(e) {
+      const dropdown = document.getElementById("profileDropdown");
+      const profileInfo = document.querySelector(".profile-info");
+      if (!dropdown.contains(e.target) && !profileInfo.contains(e.target)) {
+        dropdown.style.display = "none";
+      }
+    });
+
+
+</script>
+
+</body>
+</html>

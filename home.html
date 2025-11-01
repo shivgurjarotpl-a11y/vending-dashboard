@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=search" />
+</head>
+<body>
+  <div class="dashboard">
+
+   
+    <aside class="sidebar">
+      <div>
+       
+        <div class="logo">
+          <img src="oxymora_logo (1).png" alt="Oxymora Logo">
+        </div>
+
+         <div class="sidebar-profile">
+        <div class="profile-info" onclick="toggleDropdown()">
+          <img src="profile.jpeg" alt="User">
+          <span id="welcome">Shiv</span>
+          <i class="fa-solid fa-caret-down"></i>
+        </div>
+        <div class="profile-dropdown" id="profileDropdown">
+          <a href="profile.html"><i class="fa-solid fa-user" style="margin-right: 8px;"></i> Profile</a>
+          <a href="settings.html"><i class="fa-solid fa-gear" style="margin-right: 8px;"></i> Settings</a>
+          <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket" style="margin-right: 8px;"></i> Logout</a>
+        </div>
+      </div>
+
+        
+        <nav class="menu">
+          <a href="home.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+          <a href="add-device.html"><i class="fa-solid fa-plus"></i> Add Device</a>
+         
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+          POWERED BY <br> © 2025 Oxymora Technology Pvt. Ltd.(OTPL)
+      </div>
+    </aside>
+   
+    <main class="main-content">
+
+     <div class="page-heading">
+    <h2 class="home-header">Dashboard</h2>
+  </div>
+
+      <!-- Devices Table Section -->
+      <div class="container">
+   <header class="page-header">
+  <div class="header-left">
+    <h1>
+      Devices List
+      <span class="h-count">(<span id="totalDevices">0</span>)</span>
+    </h1>
+  </div>
+
+  <!-- <div class="header-actions">
+    <a href="add-device.html" class="btn add-device-btn">
+      <i class="fa-solid fa-plus" aria-hidden="true" style="margin-right:8px;"></i>
+      Add Device
+    </a>
+  </div> -->
+</header>
+
+
+    <div class="table-controls">
+      <div class="search-box">
+        <span class="search-icon"><span class="material-symbols-outlined">
+search
+</span></span>
+        <input type="text" placeholder="Search devices...">
+      </div>
+      <div class="filters">
+    
+        <button class="export-btn"><i class="fa-solid fa-file-export"></i> Export</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table id="deviceTable">
+        <thead>
+          <tr>
+            <th>Device Name</th>
+            <th>Device Id</th>
+            <th>Device Type</th>
+            <th>Device Model</th>
+            <th>Device Category</th>
+            <th>Date</th>
+            <th>Address</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+    </main>
+
+  </div>
+
+<script>
+/* ======= State & Config ======= */
+let allDevices = [];
+let currentPage = 1;
+const rowsPerPage = 10;
+let recentlyAddedDeviceId = null;
+let searchTerm = "";
+
+const welcomeEl = document.getElementById("welcome");
+const userName = localStorage.getItem("userName") || "";
+if (welcomeEl) {
+  welcomeEl.textContent = userName ? `Welcome, ${userName}` : welcomeEl.textContent;
+}
+
+/* Redirect if not logged in/signed up */
+if (
+  localStorage.getItem("isLoggedIn") !== "true" &&
+  localStorage.getItem("isSignedUp") !== "true"
+) {
+  window.location.href = "login.html";
+}
+
+/* ======= Inject highlight keyframes ======= */
+(function injectHighlightKeyframes(){
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes highlightRow {
+      0% { background: rgba(255,250,200,0.95); }
+      100% { background: transparent; }
+    }
+    .highlight-anim {
+      animation: highlightRow 2.5s ease forwards;
+    }
+    .export-btn.is-disabled,
+    .export-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    #profileDropdown { display: none; }
+    #profileDropdown.open { display: block; }
+  `;
+  document.head.appendChild(style);
+})();
+
+/* ======= Fetch devices from API ======= */
+async function fetchAllDevices() {
+  try {
+    const res = await fetch("https://cspv.in/Vending_dashbaord/vending_dashboard_apis/fetch_vending.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_name: userName }),
+    });
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    const data = await res.json();
+    console.log("Fetched devices:", data);
+    allDevices = Array.isArray(data) ? data : [];
+    currentPage = 1;
+    renderTable();
+    handleMaybeNewRedirect();
+  } catch (err) {
+    console.error("Fetch error:", err);
+    allDevices = [];
+    currentPage = 1;
+    renderTable();
+  }
+}
+fetchAllDevices();
+
+/* ======= Helpers ======= */
+function getVisibleDevices() {
+  if (!searchTerm) return allDevices.slice();
+  const q = searchTerm.toLowerCase();
+  return allDevices.filter(d => {
+    return (
+      String(d.device_name || "").toLowerCase().includes(q) ||
+      String(d.device_id || "").toLowerCase().includes(q) ||
+      String(d.device_type || "").toLowerCase().includes(q) ||
+      String(d.model_number || "").toLowerCase().includes(q) ||
+      String(d.category || "").toLowerCase().includes(q) ||
+      String(d.location || "").toLowerCase().includes(q)
+    );
+  });
+}
+
+/* ======= Render table (safe DOM creation) ======= */
+function renderTable() {
+  const tbody = document.querySelector("#deviceTable tbody");
+  const totalDevicesEl = document.getElementById("totalDevices");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  const visible = getVisibleDevices();
+  const totalDevices = visible.length;
+  if (totalDevicesEl) totalDevicesEl.textContent = totalDevices;
+
+  if (totalDevices === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:1.5rem;">No devices found.</td></tr>`;
+    updateExportButton(0);
+    return;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(totalDevices / rowsPerPage));
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const start = (currentPage - 1) * rowsPerPage;
+  const pageDevices = visible.slice(start, start + rowsPerPage);
+
+  // Update export button state for current page
+  updateExportButton(pageDevices.length);
+
+  pageDevices.forEach(device => {
+    const tr = document.createElement("tr");
+
+    const makeCell = (txt) => {
+      const td = document.createElement("td");
+      td.textContent = txt ?? "";
+      return td;
+    };
+
+    tr.appendChild(makeCell(device.device_name));
+    tr.appendChild(makeCell(device.device_id));
+    tr.appendChild(makeCell(device.device_type));
+    tr.appendChild(makeCell(device.model_number));
+    tr.appendChild(makeCell(device.category));
+    tr.appendChild(makeCell(device.date));
+    tr.appendChild(makeCell(device.location));
+
+    const actionTd = document.createElement("td");
+    const a = document.createElement("a");
+    a.className = "action-btn view";
+    a.href = "view-device.html?device_id=" + encodeURIComponent(device.device_id ?? "");
+    a.textContent = " View Device";
+    actionTd.appendChild(a);
+    tr.appendChild(actionTd);
+
+    // highlight if this is recently added
+    if (recentlyAddedDeviceId && String(device.device_id) === String(recentlyAddedDeviceId)) {
+      tr.classList.add("highlight-anim");
+      setTimeout(() => tr.classList.remove("highlight-anim"), 3000);
+    }
+
+    tbody.appendChild(tr);
+  });
+
+  // (Optional) If you want to show pagination numbers, create them here
+}
+
+/* ======= onDeviceAdded (public) ======= */
+function onDeviceAdded(newDevice) {
+  if (!newDevice) return;
+  allDevices.push(newDevice);
+  recentlyAddedDeviceId = newDevice.device_id ?? null;
+  const totalPages = Math.ceil(allDevices.length / rowsPerPage) || 1;
+  currentPage = totalPages;
+  renderTable();
+  setTimeout(() => { recentlyAddedDeviceId = null; }, 5000);
+}
+window.onDeviceAdded = onDeviceAdded;
+
+/* ======= Search wiring ======= */
+const searchInput = document.querySelector(".search-box input");
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    searchTerm = e.target.value.trim();
+    currentPage = 1;
+    renderTable();
+  });
+}
+
+/* ======= Export current page (CSV) + button wiring ======= */
+function updateExportButton(itemsOnPageCount) {
+  const btn = document.querySelector(".export-btn");
+  if (!btn) return;
+  if (itemsOnPageCount > 0) {
+    btn.disabled = false;
+    btn.classList.remove("is-disabled");
+    btn.setAttribute("aria-disabled", "false");
+  } else {
+    btn.disabled = true;
+    btn.classList.add("is-disabled");
+    btn.setAttribute("aria-disabled", "true");
+  }
+}
+
+function exportCurrentPageCSV() {
+  if (typeof getVisibleDevices !== "function") {
+    alert("Export failed: getVisibleDevices() not found.");
+    return;
+  }
+
+  const visible = getVisibleDevices();
+  const start = (currentPage - 1) * rowsPerPage;
+  const pageDevices = visible.slice(start, start + rowsPerPage);
+
+  if (!pageDevices.length) {
+    alert("No rows on this page to export.");
+    return;
+  }
+
+  const headers = ["Device Name","Device Id","Device Type","Device Model","Device Category","Date","Location"];
+  const rows = pageDevices.map(d => [
+    d.device_name ?? "",
+    d.device_id ?? "",
+    d.device_type ?? "",
+    d.model_number ?? "",
+    d.category ?? "",
+    d.date ?? "",
+    d.location ?? ""
+  ]);
+
+  const csvParts = [];
+  csvParts.push(headers.join(","));
+  for (const r of rows) {
+    const escaped = r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(",");
+    csvParts.push(escaped);
+  }
+  const csv = csvParts.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  const filename = `devices_page_${currentPage}_${ts}.csv`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* Attach export button handlers (safe multiple attach) */
+document.querySelectorAll(".export-btn").forEach(btn => {
+  btn.removeEventListener("click", exportCurrentPageCSV);
+  btn.addEventListener("click", exportCurrentPageCSV);
+});
+
+/* ======= Dropdown & Logout ======= */
+function toggleDropdown() {
+  const dropdown = document.getElementById("profileDropdown");
+  if (dropdown) dropdown.classList.toggle("open");
+}
+window.toggleDropdown = toggleDropdown;
+
+window.addEventListener("click", function(e) {
+  const dropdown = document.getElementById("profileDropdown");
+  const profileInfo = document.querySelector(".profile-info");
+  if (dropdown && profileInfo && !dropdown.contains(e.target) && !profileInfo.contains(e.target)) {
+    dropdown.classList.remove("open");
+  }
+});
+
+function logout() {
+  if (!confirm("Are you sure you want to log out?")) return;
+  ["isLoggedIn","isSignedUp","userEmail","userName"].forEach(k => localStorage.removeItem(k));
+  window.location.href = "login.html";
+}
+window.logout = logout;
+
+/* ======= Query param handling for new/redirect ======= */
+function handleMaybeNewRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('new') === '1') {
+    const totalPages = Math.ceil(getVisibleDevices().length / rowsPerPage) || 1;
+    currentPage = totalPages;
+    renderTable();
+    history.replaceState(null, "", window.location.pathname);
+  }
+
+  const newDeviceId = params.get('newDeviceId');
+  if (newDeviceId) {
+    recentlyAddedDeviceId = newDeviceId;
+    const idx = allDevices.findIndex(d => String(d.device_id) === String(recentlyAddedDeviceId));
+    if (idx >= 0) {
+      currentPage = Math.floor(idx / rowsPerPage) + 1;
+    } else {
+      currentPage = Math.ceil(allDevices.length / rowsPerPage) || 1;
+    }
+    renderTable();
+    history.replaceState(null, "", window.location.pathname);
+  }
+}
+
+/* Expose pagination helper */
+window.goToPage = function(page) {
+  const visible = getVisibleDevices();
+  const totalPages = Math.ceil(visible.length / rowsPerPage) || 1;
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  if (page === currentPage) return;
+  currentPage = page;
+  renderTable();
+  const tableContainer = document.querySelector('.table-container');
+  if (tableContainer) tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+</script>
+
+
+
+
+</body>
+</html>

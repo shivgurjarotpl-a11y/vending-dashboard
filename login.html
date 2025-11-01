@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login - TPL</title>
+    <link rel="stylesheet" href="signup.css" />
+    <link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
+
+  </head>
+  <body>
+    <div class="login-wrapper">
+      <div class="login-left">
+        <img src="dark-bg.jpeg" alt="Login Background" class="bg-image" />
+        <div class="logo-container">
+          <h2 class="logo">Oxymora</h2>
+        </div>
+      </div>
+
+      <div class="login-right">
+        <form id="loginForm" class="login-form">
+          <h2>LOG IN</h2>
+          <p>Please enter your username and password below to log in</p>
+
+          <div class="input-group">
+            <input type="email"
+                      id="email"
+                      placeholder="Enter your email"
+                      required
+                      autocomplete="email" />
+          </div>
+
+<div class="input-group" style="position: relative;">
+  <input
+    type="password"
+    id="password"
+    placeholder="Enter your Password"
+    required
+    style="padding-right: 40px;"
+  />
+  <span
+    id="togglePassword"
+    style="
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 16px;
+      color: #888;
+    "
+  >
+   <i class="fa-solid fa-eye"></i>
+  </span>
+</div>
+
+
+          <button type="submit">LOG IN</button>
+
+          <p
+            style="
+              margin-top: 20px;
+              text-align: center;
+              font-size: 14px;
+              color: #ccc;
+            "
+          >
+            Don’t have an account?
+            <a href="signup.html" style="color: #00ffcc; font-weight: bold"
+              >Sign Up</a
+            >
+          </p>
+        </form>
+      </div>
+    </div>
+
+<script>
+  document.getElementById("loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+
+    try {
+      const res = await fetch(
+        "https://cspv.in/Vending_dashbaord/vending_dashboard_apis/Login.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+
+      const text = await res.text();
+      console.log("Login Response:", text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {s
+        alert("Server se galat response mila");
+        return;
+      }
+
+    
+      if (data.status === true) {
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userEmail", data.user?.email || email);
+        localStorage.setItem("userName", data.user?.name || "");
+        localStorage.setItem("userPhone", data.user?.phone || "");
+
+        alert(data.message || "Login successful!");
+        window.location.href = "home.html";
+      } else {
+        alert(data.message || "Invalid email or password");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Something went wrong, please try again.");
+    }
+  });
+
+
+
+  const togglePassword = document.getElementById("togglePassword");
+const passwordField = document.getElementById("password");
+
+togglePassword.addEventListener("click", () => {
+  const type =
+    passwordField.getAttribute("type") === "password" ? "text" : "password";
+  passwordField.setAttribute("type", type);
+
+  // 👁 icon toggle
+  togglePassword.innerHTML = type === "password" 
+  ? `<i class="fa-solid fa-eye"></i>` 
+  : `<i class="fa fa-eye-slash" aria-hidden="true"></i>`;
+
+});
+
+</script>
+
+
+
+  </body>
+</html>
